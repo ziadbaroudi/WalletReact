@@ -27,11 +27,12 @@ function LightBox() {
                 balance: e.target.balance.value,
                 description: e.target.description.value,
                 currency: e.target.currency.value,
+                transactions: [],
                 id: Math.floor(new Date() / 1000),
               };
               dispatch({
                 type: "SET_WALLET",
-                wallet: [...state.wallets, walletob],
+                wallet: walletob,
               });
 
               history.push(`/wallet/${walletob.id}`);

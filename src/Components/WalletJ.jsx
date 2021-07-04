@@ -1,6 +1,5 @@
 import React, { useContext, useState, useEffect, useRef } from "react";
 import { WalletContext } from "../StateProvider";
-import Balance from "./Balance";
 import "../Custom.css";
 import { useParams } from "react-router-dom";
 import Transaction from "./Transaction";
@@ -18,18 +17,37 @@ function WalletJ() {
   let id = useParams().name;
   const [state, dispatch] = useContext(WalletContext);
   const [type, setType] = useState("");
-  const [currentWallet, setCurrentWallet] = useState({});
+  const [currentWallet, setCurrentWallet] = useState([]);
   const amount = useRef(null);
   const tags = useRef(null);
   const notes = useRef(null);
-  console.log(state);
   useEffect(() => {
-    localStorage.setItem("wallet", JSON.stringify(state));
-  }, [state]);
+    setCurrentWallet(
+      state.wallets.find((wallet) => wallet.id === parseInt(id, 10))
+    );
+  }, [state, id]);
+  let balance = parseInt(currentWallet.balance, 10);
 
-  useEffect(() => {
-    setCurrentWallet(state.wallets.find((wallet) => wallet.id == id));
-  }, [id]);
+  function calc() {
+    state.wallets
+      .find((wallet) => wallet.id == id)
+      .transactions.forEach((tran) => {
+        console.log(tran);
+        let parsed = parseInt(tran.amount, 10);
+        if (tran.type === "income") {
+          balance += parsed;
+        }
+
+        if (tran.type === "expense") {
+          balance -= parsed;
+        }
+      });
+    let balanceOb = {
+      total: balance,
+      id: currentWallet.id,
+    };
+    return balance;
+  }
   return (
     <>
       <h2
@@ -53,7 +71,7 @@ function WalletJ() {
           }}>
           <p className="lead text-white text-center fw-bold"> Wallet Balance</p>
           <h4 className="display-6 text-white text-center fw-bolder d-flex">
-            <Balance currentWallet={currentWallet} />
+            {calc()}
             <span>{currentWallet.currency}</span>
           </h4>
           <p className="lead text-white fw-bolder">
@@ -73,16 +91,12 @@ function WalletJ() {
                 tags: tags.current.value,
                 notes: notes.current.value,
                 type: type,
-                id: currentWallet.id,
+                id: id,
               };
               dispatch({
                 type: "SET_TRANSACTIONS",
-                transaction: [...state.transactions, transactionob],
+                transaction: transactionob,
               });
-              console.log(amount.current.value);
-              console.log(notes.current.value);
-              console.log(tags.current.value);
-              console.log(type);
               e.preventDefault();
             }}>
             <h6
